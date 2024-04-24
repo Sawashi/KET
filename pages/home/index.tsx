@@ -33,9 +33,20 @@ interface SubmitDataItem {
   questionType: string;
   hint: string;
 }
+interface ExcelDataItem {
+  order: number;
+  typeOfKnowledge: string;
+  topic: string;
+  numberOfQuestions: number;
+  recognize: string | null;
+  understand: string | null;
+  apply: string | null;
+  highlyApplied: string | null;
+}
 
 const HomeList: React.FC = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
+  const [convertedData, setConvertedData] = useState<ExcelDataItem[]>([]); // State to store the converted data
   const [fileUploaded, setFileUploaded] = useState<boolean>(false); // State to track file upload
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input element
   const [order, setOrder] = useState<number | undefined>(undefined);
@@ -59,7 +70,20 @@ const HomeList: React.FC = () => {
 
     // Update the submitData state with the new data
     setSubmitData(newData as unknown as SubmitDataItem[][]); // Cast newData as unknown first, then as SubmitDataItem[][]
+    setConvertedData(
+      excelData.slice(1).map((row) => ({
+        order: row[0],
+        typeOfKnowledge: row[1],
+        topic: row[2],
+        numberOfQuestions: row[3],
+        recognize: row[4] === "null" ? null : row[4],
+        understand: row[5] === "null" ? null : row[5],
+        apply: row[6] === "null" ? null : row[6],
+        highlyApplied: row[7] === "null" ? null : row[7],
+      }))
+    );
     console.log(JSON.stringify(newData)); // Log the new data to the console
+    console.log(JSON.stringify(convertedData));
   };
 
   // Assuming your JSON data is stored in a variable named `jsonData`

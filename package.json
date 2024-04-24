@@ -1,31 +1,56 @@
 {
-  "name": "nextjs-ant-design-typescript",
-  "version": "1.0.2",
-  "description": "nextjs with ant design by typescript",
-  "author": "gnokoheat",
-  "license": "MIT",
+  "name": "admin",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "dev": "cross-env NODE_OPTIONS=--max_old_space_size=4096 refine dev",
+    "build": "refine build",
+    "start": "refine start",
+    "lint": "eslint '**/*.{js,jsx,ts,tsx}'",
+    "refine": "refine"
   },
   "dependencies": {
-    "@ant-design/icons": "^4.6.2",
-    "antd": "^4.14.1",
-    "babel-plugin-import": "^1.13.3",
-    "next": "^13.4.13",
-    "next-compose-plugins": "^2.2.1",
-    "next-images": "^1.7.0",
-    "next-plugin-antd-less": "^1.8.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@ant-design/icons": "^5.0.1",
+    "@reduxjs/toolkit": "^2.2.2",
+    "@refinedev/antd": "^5.37.6",
+    "@refinedev/cli": "^2.16.28",
+    "@refinedev/core": "^4.49.0",
+    "@refinedev/devtools": "^1.1.36",
+    "@refinedev/inferencer": "^4.6.0",
+    "@refinedev/kbar": "^1.3.8",
+    "@refinedev/nextjs-router": "^6.0.2",
+    "@refinedev/strapi-v4": "^6.0.4",
+    "@types/d3-color": "^3.1.3",
+    "antd": "^5.0.5",
+    "aws-sdk": "^2.1589.0",
+    "axios": "^1.6.2",
+    "d3-ease": "^3.0.1",
+    "eslint": "^8.57.0",
+    "firebase": "^10.11.0",
+    "firebase-tools": "^13.7.2",
+    "formidable": "^3.5.1",
+    "next": "^13.0.6",
+    "next-i18next": "^8.9.0",
+    "nookies": "^2.5.2",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "recharts": "^2.10.4",
+    "styled-components": "^6.1.8",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.13.10",
-    "@types/node": "^20.4.8",
-    "@types/react": "^18.2.18",
-    "babel-loader": "^8.2.2",
-    "typescript": "^5.1.6",
-    "webpack": "5.75.0"
+    "@types/node": "^18.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@types/uuid": "^9.0.8",
+    "@typescript-eslint/parser": "5.48.0",
+    "cross-env": "^7.0.3",
+    "typescript": "^4.7.4"
+  },
+  "refine": {
+    "projectId": "1XYds8-6fPE5e-LROGnY"
   }
 }

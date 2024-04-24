@@ -1,21 +1,17 @@
-import { useRouter } from 'next/router';
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
-const redirectTo = '/menu1';
+export default function Home() {
+  const router = useRouter();
 
-const Index = () => {
-  if (typeof window !== 'undefined') {
-    const router = useRouter();
-    router.push(redirectTo);
-  }
+  // Navigate to /users when the component mounts
+  useEffect(() => {
+    router.push("/home");
+  }, []);
+
+  // Render nothing initially because we are redirecting
   return <></>;
-};
+}
 
-Index.getInitialProps = async ({ ctx }) => {
-  if (ctx && ctx.req) {
-    ctx.res.statusCode = 302;
-    ctx.res.setHeader('Location', redirectTo);
-  }
-  return { props: '' };
-};
-
-export default Index;
+// Optionally, you can indicate that this component does not use layout
+Home.noLayout = true;

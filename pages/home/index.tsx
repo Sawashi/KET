@@ -17,6 +17,8 @@ import { saveAs } from "file-saver";
 import * as ExcelJS from "exceljs";
 import React, { useState, useRef, use, useEffect } from "react";
 import * as XLSX from "xlsx";
+import { genAI, generateExam, runGemini } from "src/utils/common";
+import { ResponseExam } from "src/apis/gemini";
 
 const { Title } = Typography;
 interface Props {
@@ -27,13 +29,13 @@ interface Props {
     hint: string;
   }) => void;
 }
-interface SubmitDataItem {
+export interface SubmitDataItem {
   order: number;
   topic: string;
   questionType: string;
   hint: string;
 }
-interface ExcelDataItem {
+export interface ExcelDataItem {
   order: number;
   typeOfKnowledge: string;
   topic: string;
@@ -47,6 +49,7 @@ interface ExcelDataItem {
 const HomeList: React.FC = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
   const [convertedData, setConvertedData] = useState<ExcelDataItem[]>([]); // State to store the converted data
+  const [submitData, setSubmitData] = useState<SubmitDataItem[]>([]); // State to store the data to be submitted
   const [fileUploaded, setFileUploaded] = useState<boolean>(false); // State to track file upload
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input element
   const [order, setOrder] = useState<number | undefined>(undefined);
@@ -55,7 +58,9 @@ const HomeList: React.FC = () => {
   const [hint, setHint] = useState<string>("");
   const [questionTypes, setQuestionTypes] = useState<string[]>([]);
   const [hints, setHints] = useState<string[]>([]);
-  const [submitData, setSubmitData] = useState<SubmitDataItem[][]>([]); // State to store the data to be submitted
+  const [multipleChoiceArr, setMultipleChoiceArr] = useState<ResponseExam[]>(
+    []
+  );
   useEffect(() => {
     setConvertedData(
       excelData.slice(1).map((row) => ({
@@ -83,15 +88,18 @@ const HomeList: React.FC = () => {
     });
 
     // Update the submitData state with the new data
-    setSubmitData(newData as unknown as SubmitDataItem[][]); // Cast newData as unknown first, then as SubmitDataItem[][]
-
-    console.log(JSON.stringify(newData)); // Log the new data to the console
-    console.log(JSON.stringify(convertedData));
+    setSubmitData(newData as unknown as SubmitDataItem[]); // Cast newData as unknown first, then as SubmitDataItem[][]
+    const result = generateExam(
+      convertedData,
+      newData as unknown as SubmitDataItem[],
+      [multipleChoiceArr, setMultipleChoiceArr]
+    );
   };
 
   // Assuming your JSON data is stored in a variable named `jsonData`
   const dataSource = excelData.slice(1).map((row: any) => ({
     order: row[0],
+    typeOfKnowledge: row[1],
     topic: row[2],
   }));
   const handleFileUpload = (file: File) => {
@@ -125,7 +133,6 @@ const HomeList: React.FC = () => {
 
         // Exclude the header row
         setExcelData(data);
-        console.log(JSON.stringify(data));
         setFileUploaded(true); // Set fileUploaded to true after successful upload
         if (fileInputRef.current) {
           fileInputRef.current.value = ""; // Reset file input value after successful upload
@@ -215,6 +222,11 @@ const HomeList: React.FC = () => {
       : [];
   const columnsCallApi = [
     { title: "Order", dataIndex: "order", key: "order" },
+    {
+      title: "Type of Knowledge",
+      dataIndex: "typeOfKnowledge",
+      key: "typeOfKnowledge",
+    },
     { title: "Topic", dataIndex: "topic", key: "topic" },
     {
       title: "Type of question",
@@ -318,6 +330,25 @@ const HomeList: React.FC = () => {
               <Button type="primary" onClick={handleSubmission}>
                 Submit
               </Button>
+            </Card>
+          )}
+        </div>
+        <div>
+          {multipleChoiceArr.length > 0 && (
+            <Card
+              style={{
+                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", // Adding box shadow for a modern look
+                borderRadius: "8px", // Optional: Add border-radius for rounded corners
+              }}
+            >
+              <Title level={3}>Result</Title>
+              {multipleChoiceArr.map((item, index) => (
+                <Card key={index}>
+                  <p>Question: {item.question}</p>
+                  <p>Options: {item.options.join(", ")}</p>
+                  <p>Answer: {item.answer}</p>
+                </Card>
+              ))}
             </Card>
           )}
         </div>

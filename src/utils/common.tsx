@@ -14,14 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+const apikey = process.env.NEXT_PUBLIC_API_KEY ?? "";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
+import { ExcelDataItem, SubmitDataItem } from "pages/home";
+import { useState } from "react";
+import { ResponseExam, generateMultipleChoiceQuestion } from "src/apis/gemini";
 
 // Get your API key from https://makersuite.google.com/app/apikey
 // Access your API key as an environment variable
-export const genAI = new GoogleGenerativeAI(process.env.API_KEY || "");
+export const genAI = new GoogleGenerativeAI(apikey);
+export async function runGemini(msg: string) {
+  // For dialog language tasks (like chat), use the gemini-pro model
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
+  const chat = model.startChat();
+
+  const result = await chat.sendMessage(msg);
+  const response = result.response;
+  const text = response.text();
+  console.log(text);
+  return text;
+}
 // Converts local file information to a GoogleGenerativeAI.Part object
 export function fileToGenerativePart(path: string, mimeType: string) {
   return {
@@ -54,4 +68,34 @@ export async function displayChatTokenCount(model: any, chat: any, msg: any) {
   const history = await chat.getHistory();
   const msgContent = { role: "user", parts: [{ text: msg }] };
   await displayTokenCount(model, { contents: [...history, msgContent] });
+}
+export async function generateExam(
+  excelData: ExcelDataItem[],
+  submitData: SubmitDataItem[],
+  [multipleChoiceArr, setMultipleChoiceArr]: [
+    ResponseExam[],
+    (arr: ResponseExam[]) => void
+  ]
+) {
+  for (let i = 0; i < submitData.length; i++) {
+    if (submitData[i].questionType === "Multiple choices") {
+      setMultipleChoiceArr([]);
+      let resultMultipleChoice: ResponseExam[] = [];
+      for (let j = 0; j < excelData[i].numberOfQuestions; j++) {
+        let question = await generateMultipleChoiceQuestion(
+          submitData[i].hint,
+          4
+        );
+        while (typeof question !== "object") {
+          question = await generateMultipleChoiceQuestion(
+            submitData[i].hint,
+            4
+          );
+        }
+        resultMultipleChoice.push(question);
+      }
+      console.log(resultMultipleChoice);
+      setMultipleChoiceArr(resultMultipleChoice);
+    }
+  }
 }

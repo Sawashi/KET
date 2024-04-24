@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
+    "@google/generative-ai": "^0.8.0",
     "@reduxjs/toolkit": "^2.2.2",
     "@refinedev/antd": "^5.37.6",
     "@refinedev/cli": "^2.16.28",
@@ -34,6 +35,7 @@
     "firebase": "^10.11.0",
     "firebase-tools": "^13.7.2",
     "formidable": "^3.5.1",
+    "fs": "^0.0.2",
     "next": "^13.0.6",
     "next-i18next": "^8.9.0",
     "nookies": "^2.5.2",

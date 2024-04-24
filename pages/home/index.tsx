@@ -15,7 +15,7 @@ import {
 } from "@ant-design/icons";
 import { saveAs } from "file-saver";
 import * as ExcelJS from "exceljs";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, use, useEffect } from "react";
 import * as XLSX from "xlsx";
 
 const { Title } = Typography;
@@ -56,6 +56,20 @@ const HomeList: React.FC = () => {
   const [questionTypes, setQuestionTypes] = useState<string[]>([]);
   const [hints, setHints] = useState<string[]>([]);
   const [submitData, setSubmitData] = useState<SubmitDataItem[][]>([]); // State to store the data to be submitted
+  useEffect(() => {
+    setConvertedData(
+      excelData.slice(1).map((row) => ({
+        order: row[0],
+        typeOfKnowledge: row[1],
+        topic: row[2],
+        numberOfQuestions: row[3],
+        recognize: row[4] === "null" ? null : row[4],
+        understand: row[5] === "null" ? null : row[5],
+        apply: row[6] === "null" ? null : row[6],
+        highlyApplied: row[7] === "null" ? null : row[7],
+      }))
+    );
+  }, [excelData]);
   const handleSubmission = () => {
     // Iterate over dataSource to access each row
     const newData = dataSource.map((dataItem, index) => {
@@ -70,18 +84,7 @@ const HomeList: React.FC = () => {
 
     // Update the submitData state with the new data
     setSubmitData(newData as unknown as SubmitDataItem[][]); // Cast newData as unknown first, then as SubmitDataItem[][]
-    setConvertedData(
-      excelData.slice(1).map((row) => ({
-        order: row[0],
-        typeOfKnowledge: row[1],
-        topic: row[2],
-        numberOfQuestions: row[3],
-        recognize: row[4] === "null" ? null : row[4],
-        understand: row[5] === "null" ? null : row[5],
-        apply: row[6] === "null" ? null : row[6],
-        highlyApplied: row[7] === "null" ? null : row[7],
-      }))
-    );
+
     console.log(JSON.stringify(newData)); // Log the new data to the console
     console.log(JSON.stringify(convertedData));
   };

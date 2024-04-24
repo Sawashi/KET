@@ -1,4 +1,13 @@
-import { Typography, Button, Table, Space, Card, Modal } from "antd";
+import {
+  Typography,
+  Button,
+  Table,
+  Space,
+  Card,
+  Modal,
+  Select,
+  Input,
+} from "antd";
 import {
   UploadOutlined,
   DownloadOutlined,
@@ -10,12 +19,54 @@ import React, { useState, useRef } from "react";
 import * as XLSX from "xlsx";
 
 const { Title } = Typography;
+interface Props {
+  onSubmit: (data: {
+    order: number;
+    topic: string;
+    questionType: string;
+    hint: string;
+  }) => void;
+}
+interface SubmitDataItem {
+  order: number;
+  topic: string;
+  questionType: string;
+  hint: string;
+}
 
 const HomeList: React.FC = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
   const [fileUploaded, setFileUploaded] = useState<boolean>(false); // State to track file upload
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input element
+  const [order, setOrder] = useState<number | undefined>(undefined);
+  const [topic, setTopic] = useState<string>("");
+  const [questionType, setQuestionType] = useState<string>("");
+  const [hint, setHint] = useState<string>("");
+  const [questionTypes, setQuestionTypes] = useState<string[]>([]);
+  const [hints, setHints] = useState<string[]>([]);
+  const [submitData, setSubmitData] = useState<SubmitDataItem[][]>([]); // State to store the data to be submitted
+  const handleSubmission = () => {
+    // Iterate over dataSource to access each row
+    const newData = dataSource.map((dataItem, index) => {
+      // Extract data from each row
+      const { order, topic } = dataItem; // These are common to all rows
+      const questionType = questionTypes[index]; // Get the question type from state array
+      const hint = hints[index]; // Get the hint from state array
 
+      // Construct the object for the current row
+      return { order, topic, questionType, hint };
+    });
+
+    // Update the submitData state with the new data
+    setSubmitData(newData as unknown as SubmitDataItem[][]); // Cast newData as unknown first, then as SubmitDataItem[][]
+    console.log(JSON.stringify(newData)); // Log the new data to the console
+  };
+
+  // Assuming your JSON data is stored in a variable named `jsonData`
+  const dataSource = excelData.slice(1).map((row: any) => ({
+    order: row[0],
+    topic: row[2],
+  }));
   const handleFileUpload = (file: File) => {
     const reader = new FileReader();
 
@@ -47,6 +98,7 @@ const HomeList: React.FC = () => {
 
         // Exclude the header row
         setExcelData(data);
+        console.log(JSON.stringify(data));
         setFileUploaded(true); // Set fileUploaded to true after successful upload
         if (fileInputRef.current) {
           fileInputRef.current.value = ""; // Reset file input value after successful upload
@@ -134,6 +186,47 @@ const HomeList: React.FC = () => {
           key: index.toString(),
         }))
       : [];
+  const columnsCallApi = [
+    { title: "Order", dataIndex: "order", key: "order" },
+    { title: "Topic", dataIndex: "topic", key: "topic" },
+    {
+      title: "Type of question",
+      dataIndex: "type",
+      key: "type",
+      render: (_text: any, _record: any, index: number) => (
+        <Select
+          onChange={(value) => {
+            const newQuestionTypes = [...questionTypes];
+            newQuestionTypes[index] = value;
+            setQuestionTypes(newQuestionTypes);
+          }}
+          style={{ minWidth: "150px" }}
+        >
+          <Select.Option value="Multiple choices">
+            Multiple choices
+          </Select.Option>
+          <Select.Option value="Paragraph">Paragraph</Select.Option>
+          <Select.Option value="Fill in">Fill in</Select.Option>
+        </Select>
+      ),
+    },
+    {
+      title: "Hint",
+      dataIndex: "hint",
+      key: "hint",
+      render: (_text: any, _record: any, index: number) => (
+        <Input
+          onChange={(e) => {
+            const newHints = [...hints];
+            newHints[index] = e.target.value;
+            setHints(newHints);
+          }}
+          style={{ minWidth: "150px" }}
+        />
+      ),
+    },
+  ];
+
   return (
     <>
       <Title level={2}>Build your own English test!</Title>
@@ -182,6 +275,22 @@ const HomeList: React.FC = () => {
                 </Button>
               )}
               <Table dataSource={excelData.slice(1)} columns={columns} />
+            </Card>
+          )}
+        </div>
+        <div>
+          {excelData.length > 0 && (
+            <Card
+              style={{
+                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", // Adding box shadow for a modern look
+                borderRadius: "8px", // Optional: Add border-radius for rounded corners
+              }}
+            >
+              <Title level={3}>Config questions</Title>
+              <Table dataSource={dataSource} columns={columnsCallApi} />
+              <Button type="primary" onClick={handleSubmission}>
+                Submit
+              </Button>
             </Card>
           )}
         </div>

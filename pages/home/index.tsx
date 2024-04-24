@@ -1,5 +1,9 @@
-import { Typography, Button, Table, Space } from "antd";
-import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
+import { Typography, Button, Table, Space, Card, Modal } from "antd";
+import {
+  UploadOutlined,
+  DownloadOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import { saveAs } from "file-saver";
 import * as ExcelJS from "exceljs";
 import React, { useState, useRef } from "react";
@@ -9,25 +13,49 @@ const { Title } = Typography;
 
 const HomeList: React.FC = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
+  const [fileUploaded, setFileUploaded] = useState<boolean>(false); // State to track file upload
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input element
 
-  // Function to handle file upload
   const handleFileUpload = (file: File) => {
     const reader = new FileReader();
 
-    reader.onload = (e: any) => {
-      const workbook = XLSX.read(e.target.result, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      if (e.target && e.target.result) {
+        const result = e.target.result;
+        const workbook = XLSX.read(result as string, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-      // Exclude the header row
-      setExcelData(data);
+        // Process merged cells to ensure they have the same value
+        const mergedCells = worksheet["!merges"] || [];
+        mergedCells.forEach((merge: XLSX.Range) => {
+          const { s, e } = merge;
+          const startRowIndex = s.r;
+          const endRowIndex = e.r;
+          const startColIndex = s.c;
+          const endColIndex = e.c;
+          const mergedValue = (data as any[][])[startRowIndex][
+            startColIndex
+          ] as string; // Explicitly type mergedValue as string
+          for (let i = startRowIndex; i <= endRowIndex; i++) {
+            for (let j = startColIndex; j <= endColIndex; j++) {
+              (data as any[][])[i][j] = mergedValue; // Explicitly type data as any[][]
+            }
+          }
+        });
+
+        // Exclude the header row
+        setExcelData(data);
+        setFileUploaded(true); // Set fileUploaded to true after successful upload
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""; // Reset file input value after successful upload
+        }
+      }
     };
 
     reader.readAsBinaryString(file);
   };
-
   // Function to programmatically trigger file upload
   const triggerFileUpload = () => {
     if (fileInputRef.current) {
@@ -86,6 +114,18 @@ const HomeList: React.FC = () => {
     });
   };
 
+  // Function to handle remove file
+  const handleRemoveFile = () => {
+    Modal.confirm({
+      title: "Are you sure you want to remove the uploaded file?",
+      onOk() {
+        setExcelData([]);
+        setFileUploaded(false);
+      },
+      onCancel() {},
+    });
+  };
+
   const columns =
     excelData.length > 0
       ? excelData[0].map((col: string, index: number) => ({
@@ -123,10 +163,26 @@ const HomeList: React.FC = () => {
         </div>
         <div>
           {excelData.length > 0 && (
-            <>
+            <Card
+              style={{
+                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", // Adding box shadow for a modern look
+                borderRadius: "8px", // Optional: Add border-radius for rounded corners
+              }}
+            >
               <Title level={3}>Structure uploaded</Title>
+              {fileUploaded && (
+                <Button
+                  type="primary"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={handleRemoveFile}
+                  style={{ marginBottom: "16px" }}
+                >
+                  Remove Uploaded File
+                </Button>
+              )}
               <Table dataSource={excelData.slice(1)} columns={columns} />
-            </>
+            </Card>
           )}
         </div>
       </Space>

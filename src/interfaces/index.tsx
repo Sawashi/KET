@@ -20,3 +20,27 @@ export interface AnswerStore {
   order: string;
   questionGenerated: ResponseExam[];
 }
+export interface GroupedDataItem {
+  typeOfKnowledge: string;
+  questionByTopic: {
+    topic: string;
+    questions: ResponseExam[];
+  }[];
+}
+// Define a new interface for the restructured data
+export interface RestructuredDataItem {
+  typeOfKnowledge: string;
+  questionByTopic: {
+    topic: string;
+    questions: AnswerStore | undefined;
+  }[];
+}
+export interface TypeOfKnowledgeWithOrders {
+  typeOfKnowledge: string;
+  orders: string;
+}
+export interface AugmentedAnswerStoreItem extends AnswerStore {
+  typeOfKnowledge: string;
+  topic: string;
+  questionType: string; // New property
+}

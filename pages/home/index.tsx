@@ -23,6 +23,7 @@ import UploadedStructure from "@components/cards/uploaded";
 import ConfigQuestion from "@components/cards/configQuestion";
 import ResultGenerated from "@components/cards/resultGenerated";
 import { ExcelDataItem, SubmitDataItem, AnswerStore } from "src/interfaces";
+import Link from "next/link";
 
 const { Title } = Typography;
 
@@ -171,6 +172,11 @@ const HomeList: React.FC = () => {
   return (
     <>
       <Title level={2}>Build your own English test!</Title>
+      <br />
+      <div>
+        If you are new, click <Link href="/help">here</Link> for video guide
+      </div>
+      <br />
       <Space direction="vertical">
         <div>
           <div>

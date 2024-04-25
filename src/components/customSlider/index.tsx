@@ -8,6 +8,7 @@ import {
   AppstoreOutlined,
   EnvironmentOutlined,
   StarOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 import Link from "next/link";
 import { Typography } from "antd";
@@ -69,6 +70,9 @@ const CustomSlider: React.FC<SliderProps> = (props) => {
       >
         <Menu.Item key="home" icon={<HomeOutlined />}>
           <Link href="/home">Home</Link>
+        </Menu.Item>
+        <Menu.Item key="help" icon={<QuestionCircleOutlined />}>
+          <Link href="/help">Help</Link>
         </Menu.Item>
       </Menu>
     </Sider>

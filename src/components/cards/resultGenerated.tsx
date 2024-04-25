@@ -1,14 +1,23 @@
 import { DeleteOutlined } from "@ant-design/icons";
-import { Button, Card, Table, Typography } from "antd";
+import { Button, Card, Space, Table, Typography } from "antd";
+import { useEffect } from "react";
 import { ResponseExam } from "src/apis/gemini";
+import { AnswerStore, ExcelDataItem, SubmitDataItem } from "src/interfaces";
 
 const { Title } = Typography;
 
 interface ResultGeneratedProps {
-  multipleChoiceArr: ResponseExam[];
+  answerStore: AnswerStore[];
+  convertedData: ExcelDataItem[];
+  submitData: SubmitDataItem[];
 }
 
 const ResultGenerated: React.FC<ResultGeneratedProps> = (props) => {
+  useEffect(() => {
+    console.log(props.answerStore);
+    console.log(props.convertedData);
+    console.log(props.submitData);
+  }, []);
   return (
     <Card
       style={{
@@ -17,13 +26,40 @@ const ResultGenerated: React.FC<ResultGeneratedProps> = (props) => {
       }}
     >
       <Title level={3}>Result</Title>
-      {props.multipleChoiceArr.map((item, index) => (
-        <Card key={index}>
-          <p>Question: {item.question}</p>
-          <p>Options: {item.options.join(", ")}</p>
-          <p>Answer: {item.answer}</p>
-        </Card>
-      ))}
+      <Space direction="vertical">
+        {props.answerStore.map((answer, index) => (
+          <>
+            <Title level={4}>
+              {props.convertedData[index].order}
+              {"/ "}
+              {props.convertedData[index].typeOfKnowledge +
+                " " +
+                props.convertedData[index].topic}
+            </Title>
+            <Space direction="vertical">
+              {answer.questionGenerated.map((question, index) => (
+                <div>
+                  <div>
+                    Question {index + 1}: {question.question}
+                  </div>
+                  <Space>
+                    {question.options.map((option, index) => (
+                      <div>
+                        {String.fromCharCode(65 + index)}. {option}
+                      </div>
+                    ))}
+                  </Space>
+                  <br />
+                  <Space>
+                    <b>Answer:</b>
+                    {question.answer}
+                  </Space>
+                </div>
+              ))}
+            </Space>
+          </>
+        ))}
+      </Space>
     </Card>
   );
 };

@@ -22,7 +22,7 @@ import { ResponseExam } from "src/apis/gemini";
 import UploadedStructure from "@components/cards/uploaded";
 import ConfigQuestion from "@components/cards/configQuestion";
 import ResultGenerated from "@components/cards/resultGenerated";
-import { ExcelDataItem, SubmitDataItem } from "src/interfaces";
+import { ExcelDataItem, SubmitDataItem, AnswerStore } from "src/interfaces";
 
 const { Title } = Typography;
 
@@ -37,6 +37,7 @@ const HomeList: React.FC = () => {
   const [multipleChoiceArr, setMultipleChoiceArr] = useState<ResponseExam[]>(
     []
   );
+  const [answerStore, setAnswerStore] = useState<AnswerStore[]>([]);
   const [enableSpinnerResult, setEnableSpinnerResult] =
     useState<boolean>(false);
   useEffect(() => {
@@ -161,7 +162,7 @@ const HomeList: React.FC = () => {
       onOk() {
         setExcelData([]);
         setFileUploaded(false);
-        setMultipleChoiceArr([]);
+        setAnswerStore([]);
       },
       onCancel() {},
     });
@@ -204,13 +205,12 @@ const HomeList: React.FC = () => {
           )}
         </div>
         <div>
-          {enableSpinnerResult == true && <Spin />}
           {excelData.length > 0 && (
             <ConfigQuestion
               convertedData={convertedData}
               excelData={excelData}
-              multipleChoiceArr={multipleChoiceArr}
-              setMultipleChoiceArr={setMultipleChoiceArr}
+              answerStore={answerStore}
+              setAnswerStore={setAnswerStore}
               questionTypes={questionTypes}
               setQuestionTypes={setQuestionTypes}
               hints={hints}
@@ -223,8 +223,13 @@ const HomeList: React.FC = () => {
           )}
         </div>
         <div>
-          {multipleChoiceArr.length > 0 && (
-            <ResultGenerated multipleChoiceArr={multipleChoiceArr} />
+          {enableSpinnerResult == true && <Spin />}
+          {answerStore.length > 0 && (
+            <ResultGenerated
+              answerStore={answerStore}
+              convertedData={convertedData}
+              submitData={submitData}
+            />
           )}
         </div>
       </Space>

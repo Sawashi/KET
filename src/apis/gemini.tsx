@@ -19,7 +19,6 @@ export async function generateMultipleChoiceQuestion(
   const suffix =
     " - have " + numberOfOptions + " options, each option is a word";
   const formatAnswer = ` and format the answer as {"question": "${question}", "options": [], "answer": ""}`;
-  console.log(prefix + question + suffix + formatAnswer);
   const response = await runGemini(prefix + question + suffix + formatAnswer);
 
   try {

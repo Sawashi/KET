@@ -7,6 +7,7 @@ import {
   Modal,
   Select,
   Input,
+  Spin,
 } from "antd";
 import {
   UploadOutlined,
@@ -17,34 +18,13 @@ import { saveAs } from "file-saver";
 import * as ExcelJS from "exceljs";
 import React, { useState, useRef, use, useEffect } from "react";
 import * as XLSX from "xlsx";
-import { genAI, generateExam, runGemini } from "src/utils/common";
 import { ResponseExam } from "src/apis/gemini";
+import UploadedStructure from "@components/cards/uploaded";
+import ConfigQuestion from "@components/cards/configQuestion";
+import ResultGenerated from "@components/cards/resultGenerated";
+import { ExcelDataItem, SubmitDataItem } from "src/interfaces";
 
 const { Title } = Typography;
-interface Props {
-  onSubmit: (data: {
-    order: number;
-    topic: string;
-    questionType: string;
-    hint: string;
-  }) => void;
-}
-export interface SubmitDataItem {
-  order: number;
-  topic: string;
-  questionType: string;
-  hint: string;
-}
-export interface ExcelDataItem {
-  order: number;
-  typeOfKnowledge: string;
-  topic: string;
-  numberOfQuestions: number;
-  recognize: string | null;
-  understand: string | null;
-  apply: string | null;
-  highlyApplied: string | null;
-}
 
 const HomeList: React.FC = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
@@ -52,15 +32,13 @@ const HomeList: React.FC = () => {
   const [submitData, setSubmitData] = useState<SubmitDataItem[]>([]); // State to store the data to be submitted
   const [fileUploaded, setFileUploaded] = useState<boolean>(false); // State to track file upload
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input element
-  const [order, setOrder] = useState<number | undefined>(undefined);
-  const [topic, setTopic] = useState<string>("");
-  const [questionType, setQuestionType] = useState<string>("");
-  const [hint, setHint] = useState<string>("");
   const [questionTypes, setQuestionTypes] = useState<string[]>([]);
   const [hints, setHints] = useState<string[]>([]);
   const [multipleChoiceArr, setMultipleChoiceArr] = useState<ResponseExam[]>(
     []
   );
+  const [enableSpinnerResult, setEnableSpinnerResult] =
+    useState<boolean>(false);
   useEffect(() => {
     setConvertedData(
       excelData.slice(1).map((row) => ({
@@ -75,33 +53,9 @@ const HomeList: React.FC = () => {
       }))
     );
   }, [excelData]);
-  const handleSubmission = () => {
-    // Iterate over dataSource to access each row
-    const newData = dataSource.map((dataItem, index) => {
-      // Extract data from each row
-      const { order, topic } = dataItem; // These are common to all rows
-      const questionType = questionTypes[index]; // Get the question type from state array
-      const hint = hints[index]; // Get the hint from state array
-
-      // Construct the object for the current row
-      return { order, topic, questionType, hint };
-    });
-
-    // Update the submitData state with the new data
-    setSubmitData(newData as unknown as SubmitDataItem[]); // Cast newData as unknown first, then as SubmitDataItem[][]
-    const result = generateExam(
-      convertedData,
-      newData as unknown as SubmitDataItem[],
-      [multipleChoiceArr, setMultipleChoiceArr]
-    );
-  };
 
   // Assuming your JSON data is stored in a variable named `jsonData`
-  const dataSource = excelData.slice(1).map((row: any) => ({
-    order: row[0],
-    typeOfKnowledge: row[1],
-    topic: row[2],
-  }));
+
   const handleFileUpload = (file: File) => {
     const reader = new FileReader();
 
@@ -207,64 +161,11 @@ const HomeList: React.FC = () => {
       onOk() {
         setExcelData([]);
         setFileUploaded(false);
+        setMultipleChoiceArr([]);
       },
       onCancel() {},
     });
   };
-
-  const columns =
-    excelData.length > 0
-      ? excelData[0].map((col: string, index: number) => ({
-          title: col,
-          dataIndex: index.toString(),
-          key: index.toString(),
-        }))
-      : [];
-  const columnsCallApi = [
-    { title: "Order", dataIndex: "order", key: "order" },
-    {
-      title: "Type of Knowledge",
-      dataIndex: "typeOfKnowledge",
-      key: "typeOfKnowledge",
-    },
-    { title: "Topic", dataIndex: "topic", key: "topic" },
-    {
-      title: "Type of question",
-      dataIndex: "type",
-      key: "type",
-      render: (_text: any, _record: any, index: number) => (
-        <Select
-          onChange={(value) => {
-            const newQuestionTypes = [...questionTypes];
-            newQuestionTypes[index] = value;
-            setQuestionTypes(newQuestionTypes);
-          }}
-          style={{ minWidth: "150px" }}
-        >
-          <Select.Option value="Multiple choices">
-            Multiple choices
-          </Select.Option>
-          <Select.Option value="Paragraph">Paragraph</Select.Option>
-          <Select.Option value="Fill in">Fill in</Select.Option>
-        </Select>
-      ),
-    },
-    {
-      title: "Hint",
-      dataIndex: "hint",
-      key: "hint",
-      render: (_text: any, _record: any, index: number) => (
-        <Input
-          onChange={(e) => {
-            const newHints = [...hints];
-            newHints[index] = e.target.value;
-            setHints(newHints);
-          }}
-          style={{ minWidth: "150px" }}
-        />
-      ),
-    },
-  ];
 
   return (
     <>
@@ -295,61 +196,35 @@ const HomeList: React.FC = () => {
         </div>
         <div>
           {excelData.length > 0 && (
-            <Card
-              style={{
-                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", // Adding box shadow for a modern look
-                borderRadius: "8px", // Optional: Add border-radius for rounded corners
-              }}
-            >
-              <Title level={3}>Structure uploaded</Title>
-              {fileUploaded && (
-                <Button
-                  type="primary"
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={handleRemoveFile}
-                  style={{ marginBottom: "16px" }}
-                >
-                  Remove Uploaded File
-                </Button>
-              )}
-              <Table dataSource={excelData.slice(1)} columns={columns} />
-            </Card>
+            <UploadedStructure
+              excelData={excelData}
+              fileUploaded={fileUploaded}
+              handleRemoveFile={handleRemoveFile}
+            />
           )}
         </div>
         <div>
+          {enableSpinnerResult == true && <Spin />}
           {excelData.length > 0 && (
-            <Card
-              style={{
-                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", // Adding box shadow for a modern look
-                borderRadius: "8px", // Optional: Add border-radius for rounded corners
-              }}
-            >
-              <Title level={3}>Config questions</Title>
-              <Table dataSource={dataSource} columns={columnsCallApi} />
-              <Button type="primary" onClick={handleSubmission}>
-                Submit
-              </Button>
-            </Card>
+            <ConfigQuestion
+              convertedData={convertedData}
+              excelData={excelData}
+              multipleChoiceArr={multipleChoiceArr}
+              setMultipleChoiceArr={setMultipleChoiceArr}
+              questionTypes={questionTypes}
+              setQuestionTypes={setQuestionTypes}
+              hints={hints}
+              setHints={setHints}
+              submitData={submitData}
+              setSubmitData={setSubmitData}
+              enableSpinnerResult={enableSpinnerResult}
+              setEnableSpinnerResult={setEnableSpinnerResult}
+            />
           )}
         </div>
         <div>
           {multipleChoiceArr.length > 0 && (
-            <Card
-              style={{
-                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", // Adding box shadow for a modern look
-                borderRadius: "8px", // Optional: Add border-radius for rounded corners
-              }}
-            >
-              <Title level={3}>Result</Title>
-              {multipleChoiceArr.map((item, index) => (
-                <Card key={index}>
-                  <p>Question: {item.question}</p>
-                  <p>Options: {item.options.join(", ")}</p>
-                  <p>Answer: {item.answer}</p>
-                </Card>
-              ))}
-            </Card>
+            <ResultGenerated multipleChoiceArr={multipleChoiceArr} />
           )}
         </div>
       </Space>

@@ -5,8 +5,6 @@ import { appWithTranslation, useTranslation } from "next-i18next";
 import { Refine } from "@refinedev/core";
 import routerProvider from "@refinedev/nextjs-router";
 import { DataProvider } from "@refinedev/strapi-v4";
-import { ColorModeContext, ColorModeContextProvider } from "@contexts";
-import { Header } from "@components/header";
 import CustomSlider from "@components/customSlider";
 import "@refinedev/antd/dist/reset.css";
 import { authProvider, axiosInstance } from "src/authProvider";
@@ -23,7 +21,6 @@ type AppPropsWithLayout = AppProps & {
 };
 
 const CustomLayout = ({ children }: { children: React.ReactNode }) => {
-  const { mode } = useContext(ColorModeContext);
   const router = useRouter();
   const { pathname } = router;
   const pathSegments = pathname.split("/");
@@ -38,9 +35,6 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
     setSelectedKey(key);
   };
 
-  // Determine background color based on mode
-  const backgroundColor = mode === "dark" ? "black" : "white";
-
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <CustomSlider
@@ -52,7 +46,7 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
         <Layout.Content
           style={{
             padding: "20px",
-            backgroundColor: backgroundColor,
+            backgroundColor: "white",
             minHeight: 280,
           }}
         >
@@ -78,16 +72,14 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout): JSX.Element {
   };
 
   return (
-    <ColorModeContextProvider>
-      <Refine
-        routerProvider={routerProvider}
-        authProvider={authProvider}
-        dataProvider={DataProvider(API_URL + `/api`, axiosInstance)}
-        resources={[]}
-      >
-        {renderComponent()}
-      </Refine>
-    </ColorModeContextProvider>
+    <Refine
+      routerProvider={routerProvider}
+      authProvider={authProvider}
+      dataProvider={DataProvider(API_URL + `/api`, axiosInstance)}
+      resources={[]}
+    >
+      {renderComponent()}
+    </Refine>
   );
 }
 

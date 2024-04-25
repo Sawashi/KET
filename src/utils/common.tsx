@@ -17,10 +17,10 @@
 const apikey = process.env.NEXT_PUBLIC_API_KEY ?? "";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
-import { ExcelDataItem, SubmitDataItem } from "pages/home";
-import { useState } from "react";
-import { ResponseExam, generateMultipleChoiceQuestion } from "src/apis/gemini";
 
+import { ResponseExam, generateMultipleChoiceQuestion } from "src/apis/gemini";
+import { ExcelDataItem, SubmitDataItem } from "src/interfaces";
+import { notification } from "antd";
 // Get your API key from https://makersuite.google.com/app/apikey
 // Access your API key as an environment variable
 export const genAI = new GoogleGenerativeAI(apikey);
@@ -79,6 +79,7 @@ export async function generateExam(
 ) {
   for (let i = 0; i < submitData.length; i++) {
     if (submitData[i].questionType === "Multiple choices") {
+      notification.info({ message: "Generating multiple choice questions" });
       setMultipleChoiceArr([]);
       let resultMultipleChoice: ResponseExam[] = [];
       for (let j = 0; j < excelData[i].numberOfQuestions; j++) {
@@ -87,6 +88,10 @@ export async function generateExam(
           4
         );
         while (typeof question !== "object") {
+          notification.error({
+            message:
+              "Failed to generate multiple choice questions, retrying...",
+          });
           question = await generateMultipleChoiceQuestion(
             submitData[i].hint,
             4
@@ -95,6 +100,7 @@ export async function generateExam(
         resultMultipleChoice.push(question);
       }
       console.log(resultMultipleChoice);
+      notification.success({ message: "Generated multiple choice questions" });
       setMultipleChoiceArr(resultMultipleChoice);
     }
   }

@@ -42,4 +42,5 @@ export interface TypeOfKnowledgeWithOrders {
 export interface AugmentedAnswerStoreItem extends AnswerStore {
   typeOfKnowledge: string;
   topic: string;
+  questionType: string; // New property
 }

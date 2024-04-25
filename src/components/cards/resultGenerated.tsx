@@ -22,33 +22,43 @@ interface ResultGeneratedProps {
 const ResultGenerated: React.FC<ResultGeneratedProps> = (props) => {
   const augmentAnswerStore = (
     answerStore: AnswerStore[],
-    convertedData: ExcelDataItem[]
+    convertedData: ExcelDataItem[],
+    submitData: SubmitDataItem[]
   ): AugmentedAnswerStoreItem[] => {
     return answerStore.map((item) => {
       const matchingData = convertedData.find(
         (data) => data.order === parseInt(item.order)
       );
       if (matchingData) {
-        return {
-          ...item,
-          typeOfKnowledge: matchingData.typeOfKnowledge,
-          topic: matchingData.topic,
-        };
-      } else {
-        // Handle the case where no matching data is found (optional)
-        return {
-          ...item,
-          typeOfKnowledge: "Unknown",
-          topic: "Unknown",
-        };
+        const matchingSubmitData = submitData.find(
+          (submit) =>
+            submit.order === parseInt(item.order) &&
+            submit.topic === matchingData.topic
+        );
+        if (matchingSubmitData) {
+          return {
+            ...item,
+            typeOfKnowledge: matchingData.typeOfKnowledge,
+            topic: matchingData.topic,
+            questionType: matchingSubmitData.questionType,
+          };
+        }
       }
+      // Handle the case where no matching data is found (optional)
+      return {
+        ...item,
+        typeOfKnowledge: "Unknown",
+        topic: "Unknown",
+        questionType: "Unknown",
+      };
     });
   };
 
   // Usage example
   const augmentedAnswerStore: AugmentedAnswerStoreItem[] = augmentAnswerStore(
     props.answerStore,
-    props.convertedData
+    props.convertedData,
+    props.submitData
   );
   const renderQuestions = (questions: ResponseExam[]) => {
     return questions.map((question, index) => (
@@ -75,6 +85,7 @@ const ResultGenerated: React.FC<ResultGeneratedProps> = (props) => {
     console.log(JSON.stringify(props.answerStore));
     console.log(JSON.stringify(props.convertedData));
     console.log(augmentedAnswerStore);
+    console.log(JSON.stringify(props.submitData));
   }, []);
   let currentTypeOfKnowledge = "";
   return (
@@ -111,40 +122,6 @@ const ResultGenerated: React.FC<ResultGeneratedProps> = (props) => {
           </div>
         );
       })}
-      {/* <Space direction="vertical">
-        {props.answerStore.map((answer, index) => (
-          <>
-            <Title level={4}>
-              {props.convertedData[index].order}
-              {"/ "}
-              {props.convertedData[index].typeOfKnowledge +
-                " " +
-                props.convertedData[index].topic}
-            </Title>
-            <Space direction="vertical">
-              {answer.questionGenerated.map((question, index) => (
-                <div>
-                  <div>
-                    Question {index + 1}: {question.question}
-                  </div>
-                  <Space>
-                    {question.options.map((option, index) => (
-                      <div>
-                        {String.fromCharCode(65 + index)}. {option}
-                      </div>
-                    ))}
-                  </Space>
-                  <br />
-                  <Space>
-                    <b>Answer:</b>
-                    {question.answer}
-                  </Space>
-                </div>
-              ))}
-            </Space>
-          </>
-        ))}
-      </Space> */}
     </Card>
   );
 };

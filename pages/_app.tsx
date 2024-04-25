@@ -11,7 +11,7 @@ import { authProvider, axiosInstance } from "src/authProvider";
 import { API_URL } from "src/constants";
 import { NextPage } from "next";
 import { BackTop, Layout } from "antd";
-
+import { Analytics } from "@vercel/analytics/react";
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   noLayout?: boolean;
 };
@@ -37,6 +37,7 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      <Analytics />
       <CustomSlider
         selectedKey={selectedKey}
         setSelectedKey={setSelectedKeyHandler}

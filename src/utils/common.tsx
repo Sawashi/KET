@@ -19,7 +19,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 
 import { ResponseExam, generateMultipleChoiceQuestion } from "src/apis/gemini";
-import { ExcelDataItem, SubmitDataItem } from "src/interfaces";
+import { ExcelDataItem, SubmitDataItem, AnswerStore } from "src/interfaces";
 import { notification } from "antd";
 // Get your API key from https://makersuite.google.com/app/apikey
 // Access your API key as an environment variable
@@ -48,7 +48,6 @@ export function fileToGenerativePart(path: string, mimeType: string) {
 
 // Prints chunks of generated text to the console as they become available
 export async function streamToStdout(stream: any) {
-  console.log("Streaming...\n");
   for await (const chunk of stream) {
     // Get first candidate's current text chunk
     const chunkText = chunk.text();
@@ -56,7 +55,6 @@ export async function streamToStdout(stream: any) {
     process.stdout.write(chunkText);
   }
   // Print blank line
-  console.log("\n");
 }
 
 export async function displayTokenCount(model: any, request: any) {
@@ -72,22 +70,18 @@ export async function displayChatTokenCount(model: any, chat: any, msg: any) {
 export async function generateExam(
   excelData: ExcelDataItem[],
   submitData: SubmitDataItem[],
-  [multipleChoiceArr, setMultipleChoiceArr]: [
-    ResponseExam[],
-    (arr: ResponseExam[]) => void
-  ]
+  [answerStore, setAnswerStore]: [AnswerStore[], (arr: AnswerStore[]) => void]
 ) {
   for (let i = 0; i < submitData.length; i++) {
     if (submitData[i].questionType === "Multiple choices") {
       notification.info({ message: "Generating multiple choice questions" });
-      setMultipleChoiceArr([]);
       let resultMultipleChoice: ResponseExam[] = [];
       for (let j = 0; j < excelData[i].numberOfQuestions; j++) {
         let question = await generateMultipleChoiceQuestion(
           submitData[i].hint,
           4
         );
-        while (typeof question !== "object") {
+        while (question === "failed") {
           notification.error({
             message:
               "Failed to generate multiple choice questions, retrying...",
@@ -97,11 +91,18 @@ export async function generateExam(
             4
           );
         }
-        resultMultipleChoice.push(question);
+        if (typeof question !== "string") {
+          resultMultipleChoice.push(question);
+        }
       }
-      console.log(resultMultipleChoice);
       notification.success({ message: "Generated multiple choice questions" });
-      setMultipleChoiceArr(resultMultipleChoice);
+      let newData = answerStore;
+      newData.push({
+        order: submitData[i].order.toString(),
+        questionGenerated: resultMultipleChoice,
+      });
+      console.log("New data: " + newData);
+      setAnswerStore(newData);
     }
   }
 }

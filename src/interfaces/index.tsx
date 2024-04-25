@@ -1,3 +1,5 @@
+import { ResponseExam } from "src/apis/gemini";
+
 export interface SubmitDataItem {
   order: number;
   topic: string;
@@ -13,4 +15,8 @@ export interface ExcelDataItem {
   understand: string | null;
   apply: string | null;
   highlyApplied: string | null;
+}
+export interface AnswerStore {
+  order: string;
+  questionGenerated: ResponseExam[];
 }

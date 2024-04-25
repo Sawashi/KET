@@ -1,6 +1,6 @@
 import { Button, Card, Input, Select, Table, Typography } from "antd";
 import { ResponseExam } from "src/apis/gemini";
-import { ExcelDataItem } from "src/interfaces";
+import { ExcelDataItem, AnswerStore } from "src/interfaces";
 import { generateExam } from "src/utils/common";
 import { notification } from "antd";
 const { Title } = Typography;
@@ -8,8 +8,8 @@ const { Title } = Typography;
 interface ConfigQuestionProps {
   convertedData: ExcelDataItem[];
   excelData: any[];
-  multipleChoiceArr: ResponseExam[];
-  setMultipleChoiceArr: (arr: ResponseExam[]) => void;
+  answerStore: AnswerStore[];
+  setAnswerStore: (arr: AnswerStore[]) => void;
   questionTypes: string[];
   setQuestionTypes: (arr: string[]) => void;
   hints: string[];
@@ -76,7 +76,7 @@ const ConfigQuestion: React.FC<ConfigQuestionProps> = (props) => {
       ),
     },
   ];
-  const handleSubmission = () => {
+  const handleSubmission = async () => {
     props.setEnableSpinnerResult(true);
     // Iterate over dataSource to access each row
     const newData = dataSource.map((dataItem, index) => {
@@ -91,11 +91,12 @@ const ConfigQuestion: React.FC<ConfigQuestionProps> = (props) => {
 
     // Update the submitData state with the new data
     props.setSubmitData(newData as unknown as SubmitDataItem[]); // Cast newData as unknown first, then as SubmitDataItem[][]
-    const result = generateExam(
+    await generateExam(
       props.convertedData,
       newData as unknown as SubmitDataItem[],
-      [props.multipleChoiceArr, props.setMultipleChoiceArr]
+      [props.answerStore, props.setAnswerStore]
     );
+    console.log("After generate: " + JSON.stringify(props.answerStore) + "\n");
     props.setEnableSpinnerResult(false);
   };
   return (
